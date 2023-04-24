@@ -431,11 +431,11 @@ func New(
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
-		nil,
+		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
-	transferModule := transfer.NewAppModule(app.TransferKeeper)
+	transferModule := transfer.NewIBCModule(app.TransferKeeper)
 
 	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -521,8 +521,9 @@ func New(
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := ibcporttypes.NewRouter()
+
 	// TODO: this should be enabled later
-	// ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
+	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
 
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -561,7 +562,7 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
-		transferModule,
+		transfer.NewAppModule(app.TransferKeeper),
 		schedulerModule,
 		consensusModule,
 		valsetModule,
@@ -585,7 +586,7 @@ func New(
 		crisistypes.ModuleName,
 		banktypes.ModuleName,
 		paramstypes.ModuleName,
-		transferModule.Name(),
+		ibctransfertypes.ModuleName,
 		authtypes.ModuleName,
 		vestingtypes.ModuleName,
 		genutiltypes.ModuleName,
@@ -605,7 +606,7 @@ func New(
 		crisistypes.ModuleName,
 		banktypes.ModuleName,
 		paramstypes.ModuleName,
-		transferModule.Name(),
+		ibctransfertypes.ModuleName,
 		authtypes.ModuleName,
 		vestingtypes.ModuleName,
 		genutiltypes.ModuleName,
@@ -634,7 +635,7 @@ func New(
 		upgradetypes.ModuleName,
 		crisistypes.ModuleName,
 		paramstypes.ModuleName,
-		transferModule.Name(),
+		ibctransfertypes.ModuleName,
 		vestingtypes.ModuleName,
 		genutiltypes.ModuleName,
 		ibchost.ModuleName,
@@ -668,7 +669,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
-		transferModule,
+		transfer.NewAppModule(app.TransferKeeper),
 		schedulerModule,
 		consensusModule,
 		valsetModule,
